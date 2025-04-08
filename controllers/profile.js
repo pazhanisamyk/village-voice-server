@@ -60,17 +60,17 @@ const changePassword = async (req, res) => {
 };
 
 // Toggle Dark Mode
-const changeDarkmode = async (req, res) => {
+const changeTheme = async (req, res) => {
     try {
-        const { isDarkModeEnabled } = req.body;
+        const { theme } = req.body;
         const userId = req.user.id;
 
-        const result = await User.updateOne({ _id: userId }, { darkMode: isDarkModeEnabled });
+        const result = await User.updateOne({ _id: userId }, { theme: theme });
         if (result.nModified === 0) {
             return res.status(404).json({ message: 'User not found or no changes made' });
         }
 
-        res.json({ message: 'Dark mode setting updated successfully', darkMode: isDarkModeEnabled });
+        res.json({ message: 'Dark mode setting updated successfully', theme: theme });
     } catch (error) {
         console.error("Dark mode setting error:", error);
         res.status(500).json({ message: 'Error updating dark mode setting' });
@@ -202,4 +202,4 @@ const reportProblem = async (req, res) => {
     }
 };
 
-module.exports = { updateProfile, viewProfile, changePassword, changeDarkmode, changeLanguage, help, policies, reportProblem };
+module.exports = { updateProfile, viewProfile, changePassword, changeTheme, changeLanguage, help, policies, reportProblem };

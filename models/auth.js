@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   profileImage: { type: String, default: '' },       // Optionally add a default
   language: { type: String, default: 'en' },         // Default language
-  darkMode: { type: Boolean, default: false },
+  theme: { type: String, default: 'light' },
   role: { type: String, enum: ['user', 'admin'], default: 'user' } // Role field with 'user' as default
 }, { timestamps: true });
 
