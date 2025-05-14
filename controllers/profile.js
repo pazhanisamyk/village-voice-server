@@ -1,5 +1,8 @@
+const streamifier = require('streamifier');
+const cloudinary = require('../config/cloudinary');
 const User = require('../models/auth');
 const bcrypt = require('bcryptjs');
+
 
 // Update Profile
 const updateProfile = async (req, res) => {
@@ -17,6 +20,71 @@ const updateProfile = async (req, res) => {
         console.error("Update profile error:", error);
         res.status(500).json({ message: 'Failed to update profile' });
     }
+};
+
+//update user profile image
+
+const updateProfileImage = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized: User ID missing' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'Profile image is required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const buffer = req.file.buffer;
+
+    // Cloudinary buffer upload with streamifier
+    const uploadFromBuffer = () =>
+        new Promise((resolve, reject) => {
+          const publicId = `profileImages/${userId}`; // fixed public_id for overwrite
+      
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'profileImages',
+              public_id: userId, // fixed name, same for each user
+              overwrite: true,   // this ensures replacement
+              invalidate: true   // optional: invalidate CDN cached version
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          streamifier.createReadStream(buffer).pipe(stream);
+        });
+
+    let imageUrl;
+    try {
+      imageUrl = await uploadFromBuffer();
+    } catch (err) {
+      console.error('Cloudinary upload error:', err);
+      return res.status(500).json({ message: 'Image upload failed' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profileImage: imageUrl },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: 'Profile image updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Update profile image error:', error);
+    res.status(500).json({ message: 'Failed to update profile image' });
+  }
 };
 
 // View Profile
@@ -202,4 +270,4 @@ const reportProblem = async (req, res) => {
     }
 };
 
-module.exports = { updateProfile, viewProfile, changePassword, changeTheme, changeLanguage, help, policies, reportProblem };
+module.exports = { updateProfile, updateProfileImage, viewProfile, changePassword, changeTheme, changeLanguage, help, policies, reportProblem };
