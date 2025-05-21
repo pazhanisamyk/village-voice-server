@@ -55,13 +55,13 @@ const signIn = async (req, res) => {
     // Check if user exists
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      return res.status(422).json({ message: 'Invalid credentials' });
+      return res.status(422).json({ message: 'Invalid mobile number' });
     }
 
     // Compare provided password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(422).json({ message: 'Invalid credentials' });
+      return res.status(422).json({ message: 'Invalid password' });
     }
 
     // Generate JWT token

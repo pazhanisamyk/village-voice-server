@@ -107,5 +107,22 @@ const getSingleUserComplaint = async (req, res) => {
     }
 };
 
+// Remove an complaint by ID
+const removeComplaint = async (req, res) => {
+    try {
+        const { id } = req.params;
 
-module.exports = { createUserComplaint, getAllUserComplaint, getSingleUserComplaint, updateComplaintStatus };
+        const deletedComplaint = await Complaint.findByIdAndDelete(id);
+        if (!deletedComplaint) {
+            return res.status(404).json({ success: false, message: "Complaint not found" });
+        }
+
+        res.json({ success: true, message: "Complaint removed successfully" });
+    } catch (error) {
+        console.error("Error removing complaint:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+module.exports = { createUserComplaint, getAllUserComplaint, getSingleUserComplaint, updateComplaintStatus, removeComplaint };
