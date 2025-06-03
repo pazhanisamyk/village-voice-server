@@ -50,10 +50,10 @@ const signUp = async (req, res) => {
 // Sign In function
 const signIn = async (req, res) => {
   try {
-    const { phoneNumber, password } = req.body;
+    const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ phoneNumber });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(422).json({ message: 'Invalid mobile number' });
     }

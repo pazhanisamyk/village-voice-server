@@ -5,11 +5,13 @@ const profile = require('./api/profile');  // Import profile routes
 const complaintBox = require('./api/ComplaintBox');  // Import complaint box routes
 const complaint = require('./api/Complaint');  // Import complaint routes
 const events = require('./api/events');  // Import events routes
+const emailOtp = require('./api/emailOtp');  // Import emailOtp routes
 
 router.use(auth);
 router.use(profile);
 router.use(complaintBox);
 router.use(complaint);
 router.use(events);
+router.use(emailOtp);
 
 module.exports = router;
