@@ -10,9 +10,9 @@ const sendOtp = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await emailOtp.deleteMany({ email }); // Remove old OTPs
         await emailOtp.create({ email, otp });
-        await sendEmail(email, otp);
-        res.status(200).json({ message: 'OTP sent successfully' });
-        // res.status(200).json({ message: 'OTP sent successfully', success: true, otp: otp });
+        // await sendEmail(email, otp);
+        // res.status(200).json({ message: 'OTP sent successfully' });
+        res.status(200).json({ message: 'OTP sent successfully', success: true, otp: otp });
     } catch (error) {
         console.error("Error sending otp:", error);
         res.status(500).json({ message: 'Failed to send OTP', error: err.message });

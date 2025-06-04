@@ -1,6 +1,7 @@
 const Complaint = require("../models/Complaint");
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
+const { sendNotification } = require("./notification");
 
 // Report a Problem
 const createUserComplaint = async (req, res) => {
@@ -78,6 +79,14 @@ const updateComplaintStatus = async (req, res) => {
         if (!updatedComplaint) {
             return res.status(404).json({ message: 'Complaint not found' });
         }
+
+        // const notificationData = {
+        //     token: '',
+        //     title: `Update on your complaint ${updatedComplaint?.complaintId}`,
+        //     body: `${updatedComplaint?.title} : ${updatedComplaint?.reason}` || "Please check the updated status of your complaint."
+        // }
+
+        // await sendNotification(notificationData)
 
         res.status(200).json({
             message: 'Complaint status updated successfully',
