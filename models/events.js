@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const eventsBoxSchema = new mongoose.Schema({
+const eventsSchema = new mongoose.Schema({
   date: {
     type: String,
     required: true,
@@ -23,4 +23,4 @@ const eventsBoxSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('events', eventsBoxSchema);
+module.exports = mongoose.model('events', eventsSchema);

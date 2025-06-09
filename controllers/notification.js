@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const sendNotification = async ({ token, title, body }) => {
+const sendNotification = async ({ token, title, body, complaintId }) => {
   const accessToken = process.env.FCM_ACCESS_TOKEN;
   const projectId = process.env.FCM_PROJECT_ID;
 
@@ -11,7 +11,8 @@ const sendNotification = async ({ token, title, body }) => {
       token,
       notification: {
         title,
-        body
+        body,
+        complaintId
       }
     }
   };

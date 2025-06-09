@@ -1,6 +1,7 @@
 const User = require('../models/auth');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Notification = require('../models/notification');
 
 // Sign Up function
 const signUp = async (req, res) => {
@@ -50,7 +51,7 @@ const signUp = async (req, res) => {
 // Sign In function
 const signIn = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, fcmToken } = req.body;
 
     // Check if user exists
     const user = await User.findOne({ email });
@@ -64,12 +65,18 @@ const signIn = async (req, res) => {
       return res.status(422).json({ message: 'Invalid password' });
     }
 
+    await Notification.findOneAndUpdate(
+      { userId: user._id },
+      { fcmToken },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     // Generate JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, {
       expiresIn: '1h',
     });
 
-    res.status(200).json({ data: {...user, token, message: 'Login successful'} });
+    res.status(200).json({ data: { ...user, token, message: 'Login successful' } });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: 'Server error' });
@@ -78,11 +85,16 @@ const signIn = async (req, res) => {
 
 // Logout
 const logout = async (req, res) => {
-  try {        
-      res.json({ message: 'User logged out successfully' });
+  try {
+    const userId = req.user.id;
+    
+     // Remove the FCM token entry for this user
+    await Notification.findOneAndDelete({ userId: userId });
+
+    res.json({ message: 'User logged out successfully' });
   } catch (error) {
-      console.error("Logout error:", error);
-      res.status(500).json({ message: 'Error logging out' });
+    console.error("Logout error:", error);
+    res.status(500).json({ message: 'Error logging out' });
   }
 };
 
