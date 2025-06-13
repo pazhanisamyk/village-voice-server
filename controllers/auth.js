@@ -65,11 +65,14 @@ const signIn = async (req, res) => {
       return res.status(422).json({ message: 'Invalid password' });
     }
 
-    await Notification.findOneAndUpdate(
-      { userId: user._id },
-      { fcmToken },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    if (fcmToken) {
+
+      await Notification.findOneAndUpdate(
+        { userId: user._id },
+        { fcmToken },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
 
     // Generate JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, {
@@ -87,8 +90,8 @@ const signIn = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-     // Remove the FCM token entry for this user
+
+    // Remove the FCM token entry for this user
     await Notification.findOneAndDelete({ userId: userId });
 
     res.json({ message: 'User logged out successfully' });
