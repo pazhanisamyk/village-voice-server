@@ -3,13 +3,13 @@ const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
 const { sendNotification } = require("./notification");
 const Notification = require("../models/notification");
+const User = require('../models/auth');
 
 // Report a Problem
 const createUserComplaint = async (req, res) => {
     try {
         const { title, description, category, status, createdBy } = req.body;
         const userId = req.user?.id;
-        const adminUserId = "YOUR_ADMIN_USER_ID";
 
         const buffer = req.file?.buffer;
         const count = await Complaint.countDocuments();
@@ -44,6 +44,15 @@ const createUserComplaint = async (req, res) => {
             });
 
         const imageUrl = await uploadFromBuffer();
+        const adminUser = await User.findOne({ role: 'admin' });
+
+        if (!adminUser) {
+            return res.status(404).json({
+                message: 'Admin user not found'
+            });
+        }
+
+        const adminUserId = adminUser._id;
 
         const newBox = new Complaint({
             title,
@@ -58,18 +67,20 @@ const createUserComplaint = async (req, res) => {
 
         await newBox.save();
 
-        // const adminNotification  = await Notification.findOne({ userId: adminUserId }); // Enter admin id manually
+        const adminNotification = await Notification.findOne({ userId: adminUserId }); // Enter admin id manually
 
-        // if (adminNotification ?.fcmToken) {
+        if (adminNotification?.fcmToken) {
 
-        //     const notificationData = {
-        //         token: New Complaint Created for ${newBox?.category}`,
-        //         body: `A new complaint (${newBox?.complaintId}) has been created with Description: ${newBox?.description} and status: ${newBox?.reason}.` || "Please check the new Complaint",
-        //         complaintId: newBox?.complaintId
-        //     }
+            const notificationData = {
+                token: adminNotification?.fcmToken,
+                title: `New Complaint Created for ${newBox?.category}`,
+                body: `A new complaint (${newBox?.complaintId}) has been created with Description: ${newBox?.description} and status: ${newBox?.reason}.` || "Please check the new Complaint",
+                complaintId: newBox?._id,
+                image: newBox?.imageUrl
+            }
 
-        //     await sendNotification(notificationData)
-        // }
+            await sendNotification(notificationData)
+        }
 
         res.status(201).json({
             message: 'Complaint created successfully',
@@ -95,19 +106,20 @@ const updateComplaintStatus = async (req, res) => {
             return res.status(404).json({ message: 'Complaint not found' });
         }
 
-        // const notify = await Notification.findOne({ userId: updatedComplaint?.userId });
+        const userNotification = await Notification.findOne({ userId: updatedComplaint?.userId });
 
-        // if (notify?.fcmToken) {
+        if (userNotification?.fcmToken) {
 
-        //     const notificationData = {
-        //         token: notify?.fcmToken,
-        //         title: `Update on your complaint ${updatedComplaint?.complaintId}`,
-        //         body: `${updatedComplaint?.title} : ${updatedComplaint?.reason}` || "Please check the updated status of your complaint.",
-        //         complaintId: complaintId
-        //     }
+            const notificationData = {
+                token: userNotification?.fcmToken,
+                title: `Update on your complaint ${updatedComplaint?.complaintId}`,
+                body: `${updatedComplaint?.title} : ${updatedComplaint?.reason}` || "Please check the updated status of your complaint.",
+                complaintId: updatedComplaint?._id,
+                image: updatedComplaint?.imageUrl
+            }
 
-        //     await sendNotification(notificationData)
-        // }
+            await sendNotification(notificationData)
+        }
 
 
         res.status(200).json({

@@ -1,7 +1,8 @@
 const axios = require('axios');
+const { getAccessToken } = require('../getFcmAccessToken');
 
-const sendNotification = async ({ token, title, body, complaintId }) => {
-  const accessToken = process.env.FCM_ACCESS_TOKEN;
+const sendNotification = async ({ token, title, body, complaintId, image }) => {
+  const accessToken = await getAccessToken();
   const projectId = process.env.FCM_PROJECT_ID;
 
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -11,8 +12,16 @@ const sendNotification = async ({ token, title, body, complaintId }) => {
       token,
       notification: {
         title,
-        body,
-        complaintId
+        body
+      },
+      android: {
+        notification: {
+          image
+        }
+      },
+      data: {
+        complaintId,
+        image
       }
     }
   };
