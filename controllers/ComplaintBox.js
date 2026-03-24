@@ -9,7 +9,7 @@ const uploadImageToCloudinary = (buffer, userId) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: 'complaintBoxes',
-        public_id: userId,
+        public_id: `${userId}_${Date.now()}`,
         invalidate: true
       },
       (error, result) => {
@@ -71,12 +71,16 @@ const updateComplaintBox = async (req, res) => {
     const userId = req.user?.id;
     const buffer = req.file?.buffer;
 
+    console.log('Update ComplaintBox Request body:', req.body);
+    console.log('Update ComplaintBox Request file:', req.file ? 'File found' : 'No file');
+
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized: User ID missing' });
     }
 
-    if (!complaintBoxName || !description || !category || !req.file) {
-      return res.status(422).json({ message: 'All fields are required including an image.' });
+    if (!complaintBoxName || !description || !category) {
+      console.log('Validation Failed:', { complaintBoxName, description, category });
+      return res.status(422).json({ message: 'All fields are required.' });
     }
 
     const existingBox = await ComplaintBox.findOne({ category });
@@ -86,7 +90,10 @@ const updateComplaintBox = async (req, res) => {
       });
     }
 
-    const imageUrl = await uploadImageToCloudinary(buffer, userId);
+    let imageUrl = existingBox.imageUrl;
+    if (buffer) {
+      imageUrl = await uploadImageToCloudinary(buffer, userId);
+    }
 
     existingBox.complaintBoxName = complaintBoxName;
     existingBox.description = description;
@@ -106,12 +113,12 @@ const updateComplaintBox = async (req, res) => {
 };
 
 const getAllComplaintBox = async (req, res) => {
-    try {
-        const complaintBoxes = await ComplaintBox.find().sort({ createdAt: -1 });
-        res.status(200).json(complaintBoxes);
-      } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
-      }
+  try {
+    const complaintBoxes = await ComplaintBox.find().sort({ createdAt: -1 });
+    res.status(200).json(complaintBoxes);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
 };
 
-module.exports = {createComplaintBox, getAllComplaintBox, updateComplaintBox };
+module.exports = { createComplaintBox, getAllComplaintBox, updateComplaintBox };

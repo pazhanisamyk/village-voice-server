@@ -7,9 +7,10 @@ const Notification = require('../models/notification');
 const signUp = async (req, res) => {
   try {
     const { username, email, phoneNumber, password } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user exists by email or username
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await User.findOne({ $or: [{ email: normalizedEmail }, { username }] });
     if (existingUser) {
       return res.status(400).json({ message: 'Email or username already exists' });
     }
@@ -20,7 +21,7 @@ const signUp = async (req, res) => {
     // Create new user with default role as 'user'
     const newUser = new User({
       username,
-      email,
+      email: normalizedEmail,
       phoneNumber,
       password: hashedPassword,
       role: 'user' // default role
@@ -33,7 +34,11 @@ const signUp = async (req, res) => {
       expiresIn: '1h',
     });
 
-    res.status(201).json({ message: 'User created successfully', token });
+    res.status(201).json({
+      message: 'User created successfully',
+      token,
+      user: newUser.toObject()
+    });
   } catch (error) {
     if (error.code === 11000) {
       // Handle duplicate key error
@@ -54,9 +59,12 @@ const signIn = async (req, res) => {
     const { email, password, fcmToken } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    // Use case-insensitive search to support legacy data with capital letters
+    const user = await User.findOne({ email: { $regex: new RegExp('^' + normalizedEmail + '$', 'i') } });
+    
     if (!user) {
-      return res.status(422).json({ message: 'Invalid mobile number' });
+      return res.status(422).json({ message: 'Invalid email address' });
     }
 
     // Compare provided password with hashed password
@@ -76,10 +84,17 @@ const signIn = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, {
-      expiresIn: '1h',
+      expiresIn: '24h',
     });
 
-    res.status(200).json({ data: { ...user, token, message: 'Login successful' } });
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.status(200).json({
+      token,
+      user: userObj,
+      message: 'Login successful'
+    });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: 'Server error' });
