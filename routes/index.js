@@ -6,6 +6,9 @@ const complaintBox = require('./api/ComplaintBox');  // Import complaint box rou
 const complaint = require('./api/Complaint');  // Import complaint routes
 const events = require('./api/events');  // Import events routes
 const emailOtp = require('./api/emailOtp');  // Import emailOtp routes
+const notification = require('./api/notification');  // Import notification routes
+const scheme = require('./api/Scheme');  // Import scheme routes
+const poll = require('./api/Poll');  // Import poll routes
 
 router.use(auth);
 router.use(profile);
@@ -13,5 +16,8 @@ router.use(complaintBox);
 router.use(complaint);
 router.use(events);
 router.use(emailOtp);
+router.use(notification);
+router.use(scheme);
+router.use(poll);
 
 module.exports = router;

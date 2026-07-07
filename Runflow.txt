@@ -1,0 +1,11 @@
+Generate the serviceAccountKey.json file from the firebase console project and paste it inside the village-voice-server folder
+Path ===> village-voice-server/serviceAccountKey.json
+
+replace the serviceAccountKey.json with your own generated serviceAccountKey.json file
+
+copy the .env.example file to .env file
+Path ===> village-voice-server/.env
+
+replace the dummy values in the .env file with your own values
+Path ===> village-voice-server/.env
+

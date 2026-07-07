@@ -1,4 +1,6 @@
 const Events = require('../models/events');
+const User = require('../models/auth');
+const InAppNotification = require('../models/InAppNotification');
 
 // Add new event
 const addEvent = async (req, res) => {
@@ -11,6 +13,22 @@ const addEvent = async (req, res) => {
 
         const newEvent = new Events({ date, event, eventDescription, time });
         await newEvent.save();
+
+        // Notify all users about the new event
+        try {
+            const users = await User.find({ role: 'user' });
+            for (const u of users) {
+                await InAppNotification.create({
+                    recipientId: u._id,
+                    title: 'New Event Added',
+                    body: `A new event "${event}" is scheduled on ${date} at ${time}.`,
+                    type: 'event',
+                    referenceId: newEvent._id
+                });
+            }
+        } catch (inAppErr) {
+            console.error("Error creating in-app notifications for event:", inAppErr);
+        }
 
         res.status(201).json({ message: "Event created successfully", success: true, data: newEvent });
     } catch (error) {

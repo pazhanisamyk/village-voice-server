@@ -8,12 +8,13 @@ const errorHandler = require('./utils/errorHandler');
 
 dotenv.config();
 const app = express();
-app.use(cors({
-  origin: '*', // for development
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-const port = process.env.PORT || 3000;
+app.use(cors());
+// app.use(cors({
+//   origin: '*', // for development
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+const port = process.env.PORT || 4000;
 
 // Connect to Database
 connectDB();

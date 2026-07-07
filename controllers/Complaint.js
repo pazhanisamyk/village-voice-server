@@ -4,6 +4,7 @@ const streamifier = require('streamifier');
 const { sendNotification } = require("./notification");
 const Notification = require("../models/notification");
 const User = require('../models/auth');
+const InAppNotification = require('../models/InAppNotification');
 
 // Report a Problem
 const createUserComplaint = async (req, res) => {
@@ -67,6 +68,22 @@ const createUserComplaint = async (req, res) => {
 
         await newBox.save();
 
+        // Send in-app notifications to all admins
+        try {
+            const admins = await User.find({ role: 'admin' });
+            for (const admin of admins) {
+                await InAppNotification.create({
+                    recipientId: admin._id,
+                    title: 'New Complaint Created',
+                    body: `A new complaint (${complaintId}) has been filed: "${title}"`,
+                    type: 'complaint',
+                    referenceId: newBox._id
+                });
+            }
+        } catch (inAppErr) {
+            console.error("Error creating in-app notification for admins:", inAppErr);
+        }
+
         const adminNotification = await Notification.findOne({ userId: adminUserId }); // Enter admin id manually
 
         if (adminNotification?.fcmToken) {
@@ -104,6 +121,19 @@ const updateComplaintStatus = async (req, res) => {
 
         if (!updatedComplaint) {
             return res.status(404).json({ message: 'Complaint not found' });
+        }
+
+        // Send in-app notification to the complainant
+        try {
+            await InAppNotification.create({
+                recipientId: updatedComplaint.userId,
+                title: 'Complaint Status Updated',
+                body: `Your complaint (${updatedComplaint.complaintId}) has been updated to "${status}". Reason: ${reason || 'Awaiting for admin review'}`,
+                type: 'complaint',
+                referenceId: updatedComplaint._id
+            });
+        } catch (inAppErr) {
+            console.error("Error creating in-app notification for user:", inAppErr);
         }
 
         const userNotification = await Notification.findOne({ userId: updatedComplaint?.userId });

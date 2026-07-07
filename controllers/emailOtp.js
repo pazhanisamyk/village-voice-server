@@ -29,8 +29,22 @@ const sendOtp = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await emailOtp.deleteMany({ email: normalizedEmail }); // Remove old OTPs
         await emailOtp.create({ email: normalizedEmail, otp });
-        await sendEmail(normalizedEmail, otp);
-        res.status(200).json({ message: 'OTP sent successfully' });
+        
+        try {
+            await sendEmail(normalizedEmail, otp);
+            res.status(200).json({ message: 'OTP sent successfully' });
+        } catch (emailError) {
+            console.warn("\n==================================================");
+            console.warn(`[WARNING] Failed to send email to ${normalizedEmail}.`);
+            console.warn(`Error detail: ${emailError.message}`);
+            console.warn(`Using fallback: Use the OTP below to verify:`);
+            console.warn(`OTP: ${otp}`);
+            console.warn("==================================================\n");
+            
+            res.status(200).json({ 
+                message: 'OTP generated (Email failed, check server console for OTP)' 
+            });
+        }
     } catch (error) {
         console.error("Error sending otp:", error);
         res.status(500).json({ message: 'Failed to send OTP', error: error.message });
